@@ -3,9 +3,11 @@ import random
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackContext, CallbackQueryHandler
+from flask import Flask
+from multiprocessing import Process
 
 # Bot Token
-TOKEN = "7546442775:AAGLQ5AGb-ab94gz0yobX370yxve2N6oqNI"
+TOKEN = "7546442775:AAH-2qIYUPfG9Z7Do_PSSaSi9R5uKHtLtlc"
 
 # Mandatory channel for verification
 MANDATORY_CHANNEL = "@GODPREDICTION69"
@@ -75,7 +77,10 @@ async def joined_callback(update: Update, context: CallbackContext):
 
     if await is_user_member(user_id, context):
         await query.message.edit_text(
-            "🎉 <b>𝙑𝙚𝙧𝙞𝙛𝙞𝙘𝙖𝙩𝙞𝙤𝙣 𝙎𝙪𝙘𝙘𝙚𝙨𝙨𝙛𝙪𝙡!</b>\n\n"             "✅ 𝙔𝙤𝙪 𝙘𝙖𝙣 𝙣𝙤𝙬 𝙜𝙚𝙩 𝙥𝙧𝙚𝙙𝙞𝙘𝙩𝙞𝙤𝙣𝙨.\n"             "🔮 𝘾𝙡𝙞𝙘𝙠 𝙩𝙝𝙚 𝙗𝙪𝙩𝙩𝙤𝙣 𝙗𝙚𝙡𝙤𝙬 𝙩𝙤 𝙧𝙚𝙘𝙚𝙞𝙫𝙚 𝙮𝙤𝙪𝙧 𝙛𝙞𝙧𝙨𝙩 𝙨𝙞𝙜𝙣𝙖𝙡!\n\n"             "📢 <i>𝙎𝙩𝙖𝙮 𝙩𝙪𝙣𝙚𝙙 𝙛𝙤𝙧 𝙖𝙘𝙘𝙪𝙧𝙖𝙩𝙚 𝙨𝙞𝙜𝙣𝙖𝙡𝙨!</i>",
+            "🎉 <b>𝙑𝙚𝙧𝙞𝙛𝙞𝙘𝙖𝙩𝙞𝙤𝙣 𝙎𝙪𝙘𝙘𝙚𝙨𝙨𝙛𝙪𝙡!</b>\n\n"             
+            "✅ 𝙔𝙤𝙪 𝙘𝙖𝙣 𝙣𝙤𝙬 𝙜𝙚𝙩 𝙥𝙧𝙚𝙙𝙞𝙘𝙩𝙞𝙤𝙣𝙨.\n"             
+            "🔮 𝘾𝙡𝙞𝙘𝙠 𝙩𝙝𝙚 𝙗𝙪𝙩𝙩𝙤𝙣 𝙗𝙚𝙡𝙤𝙬 𝙩𝙤 𝙧𝙚𝙘𝙚𝙞𝙫𝙚 𝙮𝙤𝙪𝙧 𝙛𝙞𝙧𝙨𝙩 𝙨𝙞𝙜𝙣𝙖𝙡!\n\n"             
+            "📢 <i>𝙎𝙩𝙖𝙮 𝙩𝙪𝙣𝙚𝙙 𝙛𝙤𝙧 𝙖𝙘𝙘𝙪𝙧𝙖𝙩𝙚 𝙨𝙞𝙜𝙣𝙖𝙡𝙨!</i>",
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🎯 𝙂𝙀𝙏 𝙋𝙍𝙀𝘿𝙄𝘾𝙏𝙄𝙊𝙉", callback_data="predict")]])
         )
@@ -116,6 +121,17 @@ async def prediction_callback(update: Update, context: CallbackContext):
         remaining_time = int(COOLDOWN_TIME - (time.time() - last_prediction_time[user_id]))
         await query.answer(f"⏳ 𝙋𝙡𝙚𝙖𝙨𝙚 𝙬𝙖𝙞𝙩 {remaining_time} seconds.", show_alert=True)
 
+# Flask App Initialization
+flask_app = Flask(__name__)
+
+@flask_app.route('/')
+def index():
+    return "Flask server is running successfully!"
+
+# Function to Start the Flask App
+def start_flask():
+    flask_app.run(host="0.0.0.0", port=10000)
+
 # Main function
 def main():
     app = Application.builder().token(TOKEN).build()
@@ -123,6 +139,10 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(joined_callback, pattern="joined"))
     app.add_handler(CallbackQueryHandler(prediction_callback, pattern="predict"))
+
+    # Start Flask server in a separate process
+    flask_process = Process(target=start_flask)
+    flask_process.start()
 
     print("🚀 Bot is running...")
     app.run_polling()
